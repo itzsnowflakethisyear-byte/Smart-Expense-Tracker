@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Expense Tracker</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #22c55e;
+      --accent-2: #38bdf8;
+      --danger: #f97316;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #020617, #111827);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+
+    .hero, .panel {
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+      padding: 20px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .hero h1 { margin: 0 0 8px; font-size: 28px; }
+    .hero p { margin: 0; color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label { font-weight: 600; color: #cbd5e1; }
+    input, select, button {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #0f172a;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    button {
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      border: none;
+      font-weight: 700;
+    }
+
+    button:hover { filter: brightness(1.05); }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .stat {
+      padding: 14px;
+      border-radius: 14px;
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .stat strong { display: block; font-size: 20px; margin-top: 6px; }
+    .stat span { color: var(--muted); font-size: 13px; }
+
+    .list { display: grid; gap: 10px; margin-top: 14px; }
+
+    .expense-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      background: #0f172a;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .expense-item .meta { color: var(--muted); font-size: 13px; }
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.18);
+      color: #7dd3fc;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .insight {
+      margin-bottom: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.22);
+      color: #dcfce7;
+    }
+
+    .small { color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <div>
+        <h1>Smart Expense Tracker</h1>
+        <p>Track daily spending, review your monthly summary, and get AI-style insight into your habits.</p>
+      </div>
+      <div class="small">This month: <strong id="monthLabel"></strong></div>
+    </section>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>Add New Expense</h2>
+        <form id="expenseForm">
+          <div class="field">
+            <label for="description">Description</label>
+            <input id="description" name="description" placeholder="Coffee, groceries, transport..." required />
+          </div>
+          <div class="field">
+            <label for="amount">Amount (AUD $)</label>
+            <input id="amount" name="amount" type="number" min="0" step="0.01" placeholder="0.00" required />
+          </div>
+          <div class="field">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+              <option>Food</option>
+              <option>Travel</option>
+              <option>Shopping</option>
+              <option>Utilities</option>
+              <option>Entertainment</option>
+              <option>Health</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="date">Date</label>
+            <input id="date" name="date" type="date" required />
+          </div>
+          <button type="submit">Save Expense</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Monthly Summary</h2>
+        <div class="summary-grid">
+          <div class="stat">
+            <span>Total Spent</span>
+            <strong id="totalSpent">$0.00</strong>
+          </div>
+          <div class="stat">
+            <span>Highest Category</span>
+            <strong id="topCategory">—</strong>
+          </div>
+          <div class="stat">
+            <span>Avg / Day</span>
+            <strong id="avgPerDay">$0.00</strong>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 18px;">AI-Style Insights</h3>
+        <div id="insights"></div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <h2>This Month's Expenses</h2>
+      <div id="expenseList" class="list"></div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'smart-expense-tracker-data';
+    const form = document.getElementById('expenseForm');
+    const expenseList = document.getElementById('expenseList');
+    const totalSpentEl = document.getElementById('totalSpent');
+    const topCategoryEl = document.getElementById('topCategory');
+    const avgPerDayEl = document.getElementById('avgPerDay');
+    const insightsEl = document.getElementById('insights');
+    const monthLabelEl = document.getElementById('monthLabel');
+
+    const defaultExpenses = [
+      { id: crypto.randomUUID(), description: 'Groceries', amount: 82.4, category: 'Food', date: new Date().toISOString().slice(0, 10) },
+      { id: crypto.randomUUID(), description: 'Train pass', amount: 54, category: 'Travel', date: new Date().toISOString().slice(0, 10) }
+    ];
+
+    let expenses = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultExpenses;
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(value);
+    }
+
+    function getMonthExpenses() {
+      const now = new Date();
+      const month = now.getMonth();
+      const year = now.getFullYear();
+      return expenses.filter(item => {
+        const d = new Date(item.date);
+        return d.getMonth() === month && d.getFullYear() === year;
+      });
+    }
+
+    function render() {
+      const monthExpenses = getMonthExpenses();
+      const total = monthExpenses.reduce((sum, item) => sum + Number(item.amount), 0);
+      const byCategory = monthExpenses.reduce((acc, item) => {
+        acc[item.category] = (acc[item.category] || 0) + Number(item.amount);
+        return acc;
+      }, {});
+
+      const topCategory = Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0];
+      const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+      const avgPerDay = total / Math.max(1, daysInMonth);
+
+      totalSpentEl.textContent = formatCurrency(total);
+      topCategoryEl.textContent = topCategory ? `${topCategory[0]} (${formatCurrency(topCategory[1])})` : '—';
+      avgPerDayEl.textContent = formatCurrency(avgPerDay);
+      monthLabelEl.textContent = new Date().toLocaleString('en-AU', { month: 'long', year: 'numeric' });
+
+      const insights = [];
+      if (monthExpenses.length === 0) {
+        insights.push('No expenses yet. Add your first purchase to build your monthly view.');
+      } else {
+        if (topCategory) {
+          insights.push(`Your biggest spending area is ${topCategory[0]} at ${formatCurrency(topCategory[1])}.`);
+        }
+        if (total > 500) {
+          insights.push('Your spend is trending higher this month. Consider setting a weekly budget cap.');
+        } else {
+          insights.push('Spending looks steady. You are staying within a healthy range for now.');
+        }
+        if (byCategory.Food && byCategory.Food > total * 0.35) {
+          insights.push('Food is taking a large share of your budget. Try meal planning to reduce it.');
+        }
+      }
+
+      insightsEl.innerHTML = insights.map(item => `<div class="insight">${item}</div>`).join('');
+
+      if (monthExpenses.length === 0) {
+        expenseList.innerHTML = '<div class="small">No expenses recorded for this month yet.</div>';
+        return;
+      }
+
+      expenseList.innerHTML = monthExpenses
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .map(item => `
+          <div class="expense-item">
+            <div>
+              <strong>${item.description}</strong>
+              <div class="meta">${new Date(item.date).toLocaleDateString('en-AU')}</div>
+              <span class="pill">${item.category}</span>
+            </div>
+            <strong>${formatCurrency(item.amount)}</strong>
+          </div>
+        `).join('');
+    }
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const expense = {
+        id: crypto.randomUUID(),
+        description: formData.get('description').toString().trim(),
+        amount: Number(formData.get('amount')),
+        category: formData.get('category').toString(),
+        date: formData.get('date').toString()
+      };
+
+      if (!expense.description || Number.isNaN(expense.amount) || expense.amount <= 0) {
+        alert('Please enter a valid expense.');
+        return;
+      }
+
+      expenses.push(expense);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
+      form.reset();
+      document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+      render();
+    });
+
+    document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+    render();
+  </script>
+</body>
+</html>
